@@ -32,10 +32,15 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
+  spec.required_ruby_version = '>= 3.4'
+
   # Uncomment to register a new dependency of your gem
   spec.add_dependency "binding_of_caller"
 
-  spec.add_development_dependency "pry"
+  spec.add_development_dependency "pry", ">= 0.16"
+  spec.add_development_dependency "readline"
+  spec.add_development_dependency "pry-byebug"
+  spec.add_development_dependency "repl_type_completor"
 
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html

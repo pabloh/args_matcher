@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../arguments"
-
-class Arguments
+module Arguments
   VERSION = "0.1.0"
 end

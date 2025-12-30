@@ -1,29 +1,68 @@
 # frozen_string_literal: true
 
-require "pry"
-
 require 'binding_of_caller/mri'
+require 'arguments/version'
 
-Arguments = Data.define(:args, :kwargs, :block) do
-  def self.with(*args, **kwargs, &block)
-    Arguments.new(args:, kwargs:, block:).tap do |a|
-      #binding.pry
+require 'pry'
+require 'pry-byebug'
+
+module Arguments
+  PassedArguments = Data.define(:args, :kwargs, :block) do
+    def self.with(*args, **kwargs, &block)
+      new(args:, kwargs:, block:)
+    end
+
+    def empty?
+      args.empty? && kwargs.empty? && block.nil?
+    end
+
+    def first
+      args.first || kwargs.first || block
+    end
+
+    def single_value?
+      single_positional? && kwargs.empty? && block.nil?
+    end
+
+    def single_positional?
+      args.size == 1
+    end
+
+    def only_positional?
+      args.any? && kwargs.empty? && block.nil?
+    end
+
+    def only_kw?
+      args.empty? && kwargs.any? && block.nil?
+    end
+
+    def matcher
+      if empty?
+        NoArguments
+      elsif single_value?
+        first
+      elsif only_positional?
+        PositionalArguments[args]
+      elsif only_kw?
+        KwArguments[kwargs]
+      else
+        MixedArguments[args, KwArguments[kwargs], block]
+      end
     end
   end
 
-  private def instance_variables_to_inspect = %i[@args @kwargs @block].freeze
-
-  def deconstruct
-    #binding.pry
-    if args.empty?
-      NoArguments
-    else
-      args
-    end
+  PositionalArguments = Data.define(:args) do
+    def deconstruct = args
   end
-end
 
-class Arguments
+  KwArguments = Data.define(:kwargs) do
+    def deconstruct_keys(_)= kwargs
+  end
+
+  MixedArguments = Data.define(:args, :kwargs, :block) do
+    def deconstruct = args + [kwargs, block].compact
+  end
+
   NoArguments = Object.new.freeze
 
   module Matcher
@@ -31,19 +70,24 @@ class Arguments
       caller_env = binding.of_caller(1)
       sender = caller_env.receiver
 
-      caller_method_name = (caller[0][/#([^']*)'/, 1]).to_sym
+      caller_method_name = (caller[0][/[#\.]([^']*)'$/, 1]).to_sym #Horrible hack
       params = sender.method(caller_method_name).parameters
 
-      case params
-      in [[:rest, arg_rest]]
-        caller_env.eval "Arguments.with(#{arg_rest})"
+      unless args = (begin caller_env.eval "Arguments(...)"; rescue SyntaxError; nil end)
+        arg_names = params
+          .map { |type, sym| (type in :keyreq|:key) ?  "#{sym}:" : sym }
+          .join(', ')
+
+        args = caller_env.eval "Arguments(#{arg_names})"
       end
+
+      args.matcher
     end
 
-    #alias_method :args, :__args__
+    alias_method :args, :__args__
   end
 end
 
 def Arguments(...)
-  Arguments.with(...)
+  Arguments::PassedArguments.with(...)
 end
