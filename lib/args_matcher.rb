@@ -1,29 +1,20 @@
 # frozen_string_literal: true
 
 require "binding_of_caller/mri"
-require "arguments/version"
+require "args_matcher/version"
 
-module Arguments
+module ArgsMatcher
+  def self.args(...)= PassedArguments.for(...)
+
   PassedArguments = Data.define(:args, :kwargs, :block) do
-    def self.with(*args, **kwargs, &block)
+    def self.for(*args, **kwargs, &block)
       new(args:, kwargs:, block:)
     end
 
-    def empty?
-      args.empty? && kwargs.empty? && block.nil?
-    end
-
-    def first
-      args.first || kwargs.first || block
-    end
-
-    def single_value?
-      args.size == 1 && kwargs.empty? && block.nil?
-    end
-      
-    def only_kw?
-      args.empty? && kwargs.any? && block.nil?
-    end
+    def first = args.first || kwargs.first || block
+    def empty? = args.empty? && kwargs.empty? && block.nil?
+    def only_kw? = args.empty? && kwargs.any? && block.nil?
+    def single_value? = args.size == 1 && kwargs.empty? && block.nil?
 
     def matcher
       if empty?
@@ -31,18 +22,18 @@ module Arguments
       elsif single_value?
         first
       elsif only_kw?
-        KwArguments[kwargs]
+        Keywords[kwargs]
       else
-        MixedArguments[args, kwargs.first && KwArguments[kwargs], block]
+        Arguments[args, kwargs.first && Keywords[kwargs], block]
       end
     end
   end
 
-  KwArguments = Data.define(:kwargs) do
+  Keywords = Data.define(:kwargs) do
     def deconstruct_keys(_)= kwargs
   end
 
-  MixedArguments = Data.define(:args, :kwargs, :block) do
+  Arguments = Data.define(:args, :kwargs, :block) do
     def deconstruct
       args + [kwargs, block].compact
     end
@@ -58,19 +49,15 @@ module Arguments
       caller_method_name = (caller[0][/[#\.]([^']*)'$/, 1]).to_sym #Horrible hack
       params = sender.method(caller_method_name).parameters
 
-      unless args = (begin caller_env.eval "Arguments(...)"; rescue SyntaxError; nil end)
+      unless args = (begin caller_env.eval "::ArgsMatcher.args(...)"; rescue SyntaxError; nil end)
         arg_names = params
           .map { |type, sym| (type in :keyreq|:key) ?  "#{sym}:" : sym }
           .join(', ')
 
-        args = caller_env.eval "Arguments(#{arg_names})"
+        args = caller_env.eval "::ArgsMatcher.args(#{arg_names})"
       end
 
       args.matcher
     end
   end
-end
-
-def Arguments(...)
-  Arguments::PassedArguments.with(...)
 end

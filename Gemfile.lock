@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    arguments (0.1.0)
+    args_matcher (0.1.0)
       binding_of_caller
 
 GEM
@@ -71,7 +71,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  arguments!
+  args_matcher!
   irb
   pry (>= 0.16)
   pry-byebug
@@ -81,7 +81,7 @@ DEPENDENCIES
   rspec (~> 3.0)
 
 CHECKSUMS
-  arguments (0.1.0)
+  args_matcher (0.1.0)
   binding_of_caller (1.0.1) sha256=2b2902abff4246ddcfbc4da9b69bc4a019e22aeb300c2ff6289a173d4b90b29a
   byebug (11.1.3) sha256=2485944d2bb21283c593d562f9ae1019bf80002143cc3a255aaffd4e9cf4a35b
   coderay (1.1.3) sha256=dc530018a4684512f8f38143cd2a096c9f02a1fc2459edcfe534787a7fc77d4b

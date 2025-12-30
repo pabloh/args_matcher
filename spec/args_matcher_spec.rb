@@ -2,9 +2,9 @@
 
 require 'spec_helper'
 
-RSpec.describe Arguments do
+RSpec.describe ArgsMatcher do
   class Argumentative
-    include Arguments::Matcher
+    include ArgsMatcher::Matcher
   end
 
   subject(:arg) { Argumentative.new  }

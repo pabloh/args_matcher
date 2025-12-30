@@ -4,7 +4,7 @@ require "rspec/core"
 require "pry"
 require "pry-byebug"
 
-require "arguments"
+require "args_matcher"
 
 
 RSpec.configure do |config|

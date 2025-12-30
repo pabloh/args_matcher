@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative "lib/arguments/version"
+require_relative "lib/args_matcher/version"
 
 Gem::Specification.new do |spec|
-  spec.name = "arguments"
-  spec.version = Arguments::VERSION
+  spec.name = "args_matcher"
+  spec.version = ArgsMatcher::VERSION
   spec.authors = ["Pablo Herrero"]
   spec.email = ["pablodherrero@gmail.com"]
 
