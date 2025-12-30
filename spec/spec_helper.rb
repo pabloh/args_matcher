@@ -1,6 +1,11 @@
 # frozen_string_literal: true
 
+require "rspec/core"
+require "pry"
+require "pry-byebug"
+
 require "arguments"
+
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

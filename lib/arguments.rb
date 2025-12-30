@@ -1,10 +1,7 @@
 # frozen_string_literal: true
 
-require 'binding_of_caller/mri'
-require 'arguments/version'
-
-require 'pry'
-require 'pry-byebug'
+require "binding_of_caller/mri"
+require "arguments/version"
 
 module Arguments
   PassedArguments = Data.define(:args, :kwargs, :block) do
@@ -21,17 +18,9 @@ module Arguments
     end
 
     def single_value?
-      single_positional? && kwargs.empty? && block.nil?
+      args.size == 1 && kwargs.empty? && block.nil?
     end
-
-    def single_positional?
-      args.size == 1
-    end
-
-    def only_positional?
-      args.any? && kwargs.empty? && block.nil?
-    end
-
+      
     def only_kw?
       args.empty? && kwargs.any? && block.nil?
     end
@@ -41,18 +30,12 @@ module Arguments
         NoArguments
       elsif single_value?
         first
-      elsif only_positional?
-        PositionalArguments[args]
       elsif only_kw?
         KwArguments[kwargs]
       else
-        MixedArguments[args, KwArguments[kwargs], block]
+        MixedArguments[args, kwargs.first && KwArguments[kwargs], block]
       end
     end
-  end
-
-  PositionalArguments = Data.define(:args) do
-    def deconstruct = args
   end
 
   KwArguments = Data.define(:kwargs) do
@@ -60,13 +43,15 @@ module Arguments
   end
 
   MixedArguments = Data.define(:args, :kwargs, :block) do
-    def deconstruct = args + [kwargs, block].compact
+    def deconstruct
+      args + [kwargs, block].compact
+    end
   end
 
   NoArguments = Object.new.freeze
 
   module Matcher
-    def __args__
+    def args
       caller_env = binding.of_caller(1)
       sender = caller_env.receiver
 
@@ -83,8 +68,6 @@ module Arguments
 
       args.matcher
     end
-
-    alias_method :args, :__args__
   end
 end
 

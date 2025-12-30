@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'spec_helper'
+
 RSpec.describe Arguments do
   class Argumentative
     include Arguments::Matcher
@@ -194,6 +196,25 @@ RSpec.describe Arguments do
 
     it "when called with a name and an Array" do
       expect(arg.mixed_args([1,2], name: 'name')).to eq('a name "name" and an Array eq [1, 2]')
+    end
+  end
+
+  context "Calling 'case args' on method(a, &block) definition" do
+    class Argumentative
+      def with_block(a=nil, &block) = case args
+      in Integer => num, Proc => bl
+        "a number #{num} and a block with #{bl.call}"
+      in nil, Proc => bl
+        "only a block and a block with #{bl.call}"
+      end
+    end
+
+    it "when called with a number and a block" do
+      expect(arg.with_block(1) { "block" }).to eq('a number 1 and a block with block')
+    end
+
+    it "when called with only a block" do
+      expect(arg.with_block { "block" }).to eq("only a block and a block with block")
     end
   end
 end
