@@ -4,7 +4,7 @@ require "binding_of_caller/mri"
 require "args_matcher/version"
 
 module ArgsMatcher
-  def self.args(...)= PassedArguments.for(...)
+  def self.args(...) = PassedArguments.for(...)
 
   PassedArguments = Data.define(:args, :kwargs, :block) do
     def self.for(*args, **kwargs, &block)
@@ -49,13 +49,11 @@ module ArgsMatcher
       caller_method_name = (caller[0][/[#\.]([^']*)'$/, 1]).to_sym #Horrible hack
       params = sender.method(caller_method_name).parameters
 
-      unless args = (begin caller_env.eval "::ArgsMatcher.args(...)"; rescue SyntaxError; nil end)
-        arg_names = params
+      args = (begin caller_env.eval "::ArgsMatcher.args(...)"; rescue SyntaxError; nil end) ||
+        params
           .map { |type, sym| (type in :keyreq|:key) ?  "#{sym}:" : sym }
           .join(', ')
-
-        args = caller_env.eval "::ArgsMatcher.args(#{arg_names})"
-      end
+          .then { caller_env.eval "::ArgsMatcher.args(#{it})"}
 
       args.matcher
     end
